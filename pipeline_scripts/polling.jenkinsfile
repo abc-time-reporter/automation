@@ -1,0 +1,34 @@
+pipeline
+{
+    agent any
+    environment 
+    {
+        GIT_API_HEAD ="https://api.github.com/repos/abc-time-reporter/main-time-reporter"
+    }
+    stages
+    {
+        stage("Query pull requests")
+        {
+            steps 
+            {
+                timeout(time: 2, unit: "MINUTES")
+                {
+                    script
+                    {
+                        def response = httpRequest([
+                            authentication: 'jenkins_service'
+                            url: "${GIT_API_HEAD}/pulls?base=master"
+                        ])
+                        echo "Status: ${response.status}"
+                        def json = readJson text: response.content
+                        def pullrequests = json.values
+                        for(int pullrequest in pullrequests)
+                        {
+                            echo "Processing PR ${pullrequest.url}"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
