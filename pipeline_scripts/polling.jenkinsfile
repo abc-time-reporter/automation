@@ -5,7 +5,7 @@ pipeline
     {
         GIT_API_HEAD ="https://api.github.com/repos/abc-time-reporter/main-time-reporter"
         PR_number=''
-        job_done=false
+        job_done= false
     }
     stages
     {
@@ -50,10 +50,10 @@ pipeline
                              if(prJson.get("state")=="open")
                                 { 
                                    echo "in2"
-                                   env.PR_number =prJson.get("id")
+                                   PR_number =prJson.get("id")
                                    env.job_done=true
-                                   echo "triggering build for PR_number:${env.PR_number}"
-                                   def params1 =[string(name:'pr_number',value:"${env.PR_number}")]
+                                   echo "triggering build for PR_number:${PR_number}"
+                                   def params1 =[string(name:'pr_number',value:"${PR_number}")]
                                    build job :"Pr build main",wait:false,parameters:params1 
                                    break
                                 }
@@ -71,13 +71,13 @@ pipeline
                 { 
                     if(env.job_done==true) 
                     { 
-                        echo "var1 ${env.PR_number}" 
-                        properties([ parameters([ string(defaultValue: "${env.PR_number}",
+                        echo "var1 ${PR_number}" 
+                        properties([ parameters([ string(defaultValue: "${PR_number}",
                         description: 'last recored pull request number', name: 'last_build', trim: true) ]) ]) 
                     } 
                     else 
                     { 
-                        echo "var2 ${env.PR_number}" 
+                        echo "var2 ${PR_number}" 
                         properties([ parameters([ string(defaultValue: "${last_build}",
                         description: 'last recored pull request number',
                         name: 'last_build', trim: true) ])])
