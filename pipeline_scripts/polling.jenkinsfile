@@ -4,6 +4,7 @@ pipeline
     environment 
     {
         GIT_API_HEAD ="https://api.github.com/repos/abc-time-reporter/main-time-reporter"
+        PR_number=''
     }
     stages
     {
@@ -46,12 +47,12 @@ pipeline
                             echo "in"
                             def prJson = readJSON text: PrResponse.content
                              if(prJson.get("state")=="open")
-                              { 
-                                echo "in2"
-                                def PR_number =prJson.get("id")
+                                { 
+                                   echo "in2"
+                                   env.PR_number =prJson.get("id")
                                    env.job_done=true
-                                   echo "triggering build for PR_number:${PR_number}"
-                                   def params1 =[string(name:'pr_number',value:"${PR_number}")]
+                                   echo "triggering build for PR_number:${env.PR_number}"
+                                   def params1 =[string(name:'pr_number',value:"${env.PR_number}")]
                                    build job :"Pr build main",wait:false,parameters:params1 
                                    break
                                 }
@@ -62,19 +63,20 @@ pipeline
             }
         }
          stage('save variable')
-        { steps
+        { 
+            steps
            { 
                 script 
                 { 
                     if(env.job_done==true) 
                     { 
-                        echo "var ${PR_number}" 
-                        properties([ parameters([ string(defaultValue: "${PR_number}",
+                        echo "var ${env.PR_number}" 
+                        properties([ parameters([ string(defaultValue: "${env.PR_number}",
                         description: 'last recored pull request number', name: 'last_build', trim: true) ]) ]) 
                     } 
                     else 
                     { 
-                        echo "var ${last_recorded_build}" properties([ parameters([ string(defaultValue: "${last_recorded_build}",
+                        echo "var ${last_build}" properties([ parameters([ string(defaultValue: "${last_build}",
                         description: 'last recored pull request number',
                         name: 'last_build', trim: true) ])])
                     }
