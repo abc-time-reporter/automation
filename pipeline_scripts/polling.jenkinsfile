@@ -51,7 +51,7 @@ pipeline
                                 { 
                                    echo "in2"
                                    PR_number =prJson.get("id")
-                                   env.job_done=true
+                                   job_done=true
                                    echo "triggering build for PR_number:${PR_number}"
                                    def params1 =[string(name:'pr_number',value:"${PR_number}")]
                                    build job :"Pr build main",wait:false,parameters:params1 
@@ -69,7 +69,7 @@ pipeline
            { 
                 script 
                 { 
-                    if(env.job_done==true) 
+                    if(job_done==true) 
                     { 
                         echo "var1 ${PR_number}" 
                         properties([ parameters([ string(defaultValue: "${PR_number}",
