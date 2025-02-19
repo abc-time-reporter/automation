@@ -49,8 +49,9 @@ pipeline
                               { 
                                 echo "in2"
                                 def PR_number =prJson.get("id")
-                                 env.job_done=true echo "triggering build for PR_number:${PR_number}"
-                                  def params1 =[string(name:'pr_number',value:"${PR_number}")]
+                                   env.job_done=true
+                                   echo "triggering build for PR_number:${PR_number}"
+                                   def params1 =[string(name:'pr_number',value:"${PR_number}")]
                                    build job :"Pr build main",wait:false,parameters:params1 
                                    break
                                 }
