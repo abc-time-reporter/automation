@@ -77,7 +77,7 @@ pipeline
                     } 
                     else 
                     { 
-                        echo "var2 ${last_build}" 
+                        echo "var2 ${env.PR_number}" 
                         properties([ parameters([ string(defaultValue: "${last_build}",
                         description: 'last recored pull request number',
                         name: 'last_build', trim: true) ])])
