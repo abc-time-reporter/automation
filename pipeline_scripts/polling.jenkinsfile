@@ -7,28 +7,72 @@ pipeline
     }
     stages
     {
-        stage("Query pull requests")
+        stage("get last build")
         {
             steps 
             {
-                timeout(time: 2, unit: "MINUTES")
+                script 
                 {
-                    script
+                    try
                     {
-                        def response = httpRequest([
-                            authentication: 'jenkins_service'
-                            url: "${GIT_API_HEAD}/pulls?base=master"
+                        last_build = params.last_build as Integer
+                        echo "last build:${last_build}"
+
+                    }
+                    catch (Exception e)
+                    {
+                        echo("error")
+                    }
+                }
+            }
+        }
+        stage("get github last build")
+        {
+            steps
+            {
+                script
+                {
+                    env.job_done =false
+                    for(int i=last_build+1;last_build+10;i++)
+                    {
+                        echo "${i}"
+                        def prResponse = httpResuest([
+                            authentication :"abc-servic-user",
+                            url :"${GIT_API_HEAD}/pulls/${i}",
+                            validResponseCodes: '200,404,401' 
                         ])
-                        echo "Status: ${response.status}"
-                        def json = readJson text: response.content
-                        def pullrequests = json.values
-                        for(int pullrequest in pullrequests)
-                        {
-                            echo "Processing PR ${pullrequest.url}"
+                        if (PrResponse.status ==200)
+                         { 
+                            def prJson = readJSON text: PrResponse.content
+                             if(prJson.get("state")=="OPEN")
+                              { 
+                                def PR_number =prJson.get("id")
+                                 env.job_done=true echo "triggering build for PR_number:${PR_number}"
+                                  def params1 =[string(name:'pr_number',value:"${PR_number}")]
+                                   build job :"Pr build main",wait:false,parameters:params1 
+                                   break
+                                }
+
                         }
                     }
                 }
             }
         }
+         stage('save variable')
+          { steps
+           { script 
+           { 
+            if(env.job_done==true) 
+           { 
+            echo "var ${PR_number}" 
+           properties([ parameters([ string(defaultValue: "${PR_number}",
+            description: 'last recored pull request number', name: 'last_build', trim: true) ]) ]) } 
+            else { 
+                echo "var ${last_recorded_build}" properties([ parameters([ string(defaultValue: "${last_recorded_build}",
+                 description: 'last recored pull request number',
+                  name: 'last_build', trim: true) ]) ])
+            }
+        }
+        
     }
 }
