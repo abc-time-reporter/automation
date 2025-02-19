@@ -76,7 +76,8 @@ pipeline
                     } 
                     else 
                     { 
-                        echo "var ${last_build}" properties([ parameters([ string(defaultValue: "${last_build}",
+                        echo "var ${last_build}" 
+                        properties([ parameters([ string(defaultValue: "${last_build}",
                         description: 'last recored pull request number',
                         name: 'last_build', trim: true) ])])
                     }
