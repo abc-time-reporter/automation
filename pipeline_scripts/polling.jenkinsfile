@@ -5,6 +5,7 @@ pipeline
     {
         GIT_API_HEAD ="https://api.github.com/repos/abc-time-reporter/main-time-reporter"
         PR_number=''
+        job_done=false
     }
     stages
     {
