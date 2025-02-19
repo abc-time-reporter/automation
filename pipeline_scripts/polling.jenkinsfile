@@ -59,19 +59,24 @@ pipeline
             }
         }
          stage('save variable')
-          { steps
-           { script 
+        { steps
            { 
-            if(env.job_done==true) 
-           { 
-            echo "var ${PR_number}" 
-           properties([ parameters([ string(defaultValue: "${PR_number}",
-            description: 'last recored pull request number', name: 'last_build', trim: true) ]) ]) } 
-            else { 
-                echo "var ${last_recorded_build}" properties([ parameters([ string(defaultValue: "${last_recorded_build}",
-                 description: 'last recored pull request number',
-                  name: 'last_build', trim: true) ])])
-            }
+                script 
+                { 
+                    if(env.job_done==true) 
+                    { 
+                        echo "var ${PR_number}" 
+                        properties([ parameters([ string(defaultValue: "${PR_number}",
+                        description: 'last recored pull request number', name: 'last_build', trim: true) ]) ]) 
+                    } 
+                    else 
+                    { 
+                        echo "var ${last_recorded_build}" properties([ parameters([ string(defaultValue: "${last_recorded_build}",
+                        description: 'last recored pull request number',
+                        name: 'last_build', trim: true) ])])
+                    }
+                }
+           }
         }
         
     }
