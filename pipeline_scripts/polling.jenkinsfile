@@ -36,7 +36,7 @@ pipeline
                     for(int i=last_build+1;last_build+10;i++)
                     {
                         echo "${i}"
-                        def prResponse =httpRequest([
+                        def PrResponse =httpRequest([
                             authentication :"265950d0-3094-4dc3-98d5-47ee301eeb60",
                             url :"${GIT_API_HEAD}/pulls/${i}",
                             validResponseCodes: '200,404,401' 
