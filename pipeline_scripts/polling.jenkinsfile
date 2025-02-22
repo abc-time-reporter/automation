@@ -54,7 +54,7 @@ pipeline
                                    PR_number =prJson.get("id")
                                    job_done=true
                                    echo "triggering build for commit:${PR_number}"
-                                   def params1 =[string(name:'pr_number',value:"${i}")]
+                                   def params1 =[string(name:'PR_no',value:"${i}")]
                                    build job :"Pr build main",wait:false,parameters:params1 
                                    PR_Id=i
                                    break
