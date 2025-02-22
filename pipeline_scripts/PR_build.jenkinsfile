@@ -5,12 +5,31 @@ pipeline
     {
         string(defaultValue:'0',description:"Pull Request ID", name:"PR_no")
     }
+    environment
+    {
+        GIT_API_HEAD ="https://api.github.com/repos/abc-time-reporter/main-time-reporter"
+    }
     stages
     {
-        stage("initial stage")
+        stage("fetch-pull-request-info")
         {
             steps{
-                echo("${PR_no}")
+                script
+                {
+                    final int PR_ID = env.PR_no as Integer
+                    echo "Building pull request for ${PR_ID}"
+
+                }
+                script
+                {
+                    def prResponse = httpRequest([
+                        authentication :"265950d0-3094-4dc3-98d5-47ee301eeb60",
+                        url: "${GIT_API_HEAD}/pulls/${env.PR_ID}"
+                        validResponseCodes: '200'
+                        def prJson = readJSON text: PrResponse.content
+                        
+                    ])
+                }
             }
         }
     }
