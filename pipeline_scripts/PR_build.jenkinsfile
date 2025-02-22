@@ -3,7 +3,7 @@ pipeline
     agent any
     parameters
     {
-        string(defaultValue:'0' name:"PR_no")
+        string(defaultValue:'0',description:"Pull Request ID", name:"PR_no")
     }
     stages
     {
