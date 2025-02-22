@@ -1,12 +1,16 @@
 pipeline
 {
     agent any
+    parameters
+    {
+        string(defaultValue:'0' name:"PR_no")
+    }
     stages
     {
         stage("initial stage")
         {
             steps{
-                echo("11")
+                echo("${PR_no}")
             }
         }
     }
