@@ -35,8 +35,42 @@ pipeline
                     env.target_branch = prJson.base.ref
                     echo "Target Branch: ${env.target_branch}"
                 }
+                script 
+                {
+                    def commitResponse = httpRequest([
+                        authentication :"265950d0-3094-4dc3-98d5-47ee301eeb60",
+                        url: "${GIT_API_HEAD}/pulls/${env.PR_no}/commits",
+                        validResponseCodes: '200'
+                    ])
+                }
+            }
+            post 
+            {
+                faliure
+                {
+                    script{
+                    env.faliure_msg ="Failed to get PR Info"
+                    }
+                }
             }
         }
+        stage("checkout source")
+        {
+            parallel
+            {
+                dir("revision-checkout")
+                {
+                    bat'''
+                    git init
+                    git remote add origin https://github.com/abc-time-reporter/main-time-reporter.git
+                    git fetch --all
+                    git checkout -b %source_branch% origin/%source_branch%
+                    git merge origin/master
+                    '''
+                }
+            }
+        }
+        
     }
 
 }
