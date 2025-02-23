@@ -24,7 +24,7 @@ pipeline
                 {
                     def prResponse = httpRequest([
                         authentication :"265950d0-3094-4dc3-98d5-47ee301eeb60",
-                        url: "${GIT_API_HEAD}/pulls/${env.PR_ID}",
+                        url: "${GIT_API_HEAD}/pulls/${PR_ID}",
                         validResponseCodes: '200'
                         
 
