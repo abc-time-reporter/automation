@@ -63,7 +63,7 @@ pipeline
                     steps{
                         dir("revision-checkout")
                         {
-                            bat'''
+                            sh'''
                             git init
                             git remote add origin https://github.com/abc-time-reporter/main-time-reporter.git
                             git fetch --all
