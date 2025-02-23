@@ -29,7 +29,7 @@ pipeline
                         
 
                     ])
-                    def prJson = readJSON text: PrResponse.content
+                    def prJson = readJSON text: prResponse.content
                 }
             }
         }
