@@ -58,15 +58,20 @@ pipeline
         {
             parallel
             {
-                dir("revision-checkout")
+                stage("revision-checkout")
                 {
-                    bat'''
-                    git init
-                    git remote add origin https://github.com/abc-time-reporter/main-time-reporter.git
-                    git fetch --all
-                    git checkout -b %source_branch% origin/%source_branch%
-                    git merge origin/master
-                    '''
+                    steps{
+                        dir("revision-checkout")
+                        {
+                            bat'''
+                            git init
+                            git remote add origin https://github.com/abc-time-reporter/main-time-reporter.git
+                            git fetch --all
+                            git checkout -b %source_branch% origin/%source_branch%
+                            git merge origin/master
+                            '''
+                        }
+                    }
                 }
             }
         }
