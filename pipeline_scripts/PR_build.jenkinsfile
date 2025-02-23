@@ -33,7 +33,7 @@ pipeline
                     env.source_branch = prJson.head.ref
                     echo "Source Branch: ${env.source_branch}"
                     env.target_branch = prJson.base.ref
-                    ech "Target Branch: ${env.target_branch}"
+                    echo "Target Branch: ${env.target_branch}"
                 }
             }
         }
