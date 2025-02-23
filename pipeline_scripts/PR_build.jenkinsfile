@@ -46,7 +46,7 @@ pipeline
             }
             post 
             {
-                faliure
+                failure
                 {
                     script{
                     env.faliure_msg ="Failed to get PR Info"
