@@ -30,6 +30,10 @@ pipeline
 
                     ])
                     def prJson = readJSON text: prResponse.content
+                    env.source_branch = prJson.head.ref
+                    echo "Source Branch: ${env.source_branch}"
+                    env.target_branch = prJson.base.ref
+                    ech "Target Branch: ${env.target_branch}"
                 }
             }
         }
