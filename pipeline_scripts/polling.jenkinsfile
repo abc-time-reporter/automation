@@ -10,83 +10,68 @@ pipeline
     }
     stages
     {
-        stage("get last build")
+        stage("get pull requests")
         {
-            steps 
-            {
+            steps{
                 script 
                 {
-                    try
-                    {
-                        last_build = params.last_build as Integer
-                        echo "last build:${last_build}"
+                    def response = httpRequest([
+                        authentication:"jenkins_service_user",
+                        url :"${GIT_API_HEAD}/pulls"
 
-                    }
-                    catch (Exception e)
+                    ])
+                    echo "Status: ${response.status}"
+                    def json = readJSON text: response.content
+                    def pulls = json.values
+                    for (int pr in json)
                     {
-                        echo("error")
+                        echo "processing ${pr.statuses_url}"
+                            processPR(pr.number)
                     }
                 }
             }
-        }
-        stage("get github last build")
-        {
-            steps
-            {
-                script
-                {
-                    env.job_done =false
-                    for(int i=last_build+1;last_build+10;i++)
-                    {
-                        echo "${i}"
-                        def PrResponse =httpRequest([
-                            authentication :"265950d0-3094-4dc3-98d5-47ee301eeb60",
-                            url :"${GIT_API_HEAD}/pulls/${i}",
-                            validResponseCodes: '200,404,401' 
-                        ])
-                        if (PrResponse.status ==200)
-                         { 
-                            
-                            def prJson = readJSON text: PrResponse.content
-                             if(prJson.get("state")=="open")
-                                { 
-                                  
-                                   PR_number =prJson.get("id")
-                                   job_done=true
-                                   echo "triggering build for commit:${PR_number}"
-                                   def params1 =[string(name:'PR_no',value:"${i}")]
-                                   build job :"Pr build main",wait:false,parameters:params1 
-                                   PR_Id=i
-                                   break
-                                }
-
-                        }
-                    }
-                }
-            }
-        }
-         stage('save variable')
-        { 
-            steps
-           { 
-                script 
-                { 
-                    if(job_done==true) 
-                    { 
-                        echo "var ${PR_Id}" 
-                        properties([ parameters([ string(defaultValue: "${PR_Id}",
-                        description: 'last recored pull request number', name: 'last_build', trim: true) ]) ]) 
-                    } 
-                    else 
-                    { 
-                        echo "var ${last_build}" 
-                        properties([ parameters([ string(defaultValue: "${last_build}",
-                        description: 'last recored pull request number',
-                        name: 'last_build', trim: true) ])])
-                    }
-                }
-           }
         }
         
     }
+}
+
+def processPR(PR_ID)
+{
+    def response = httpRequest([
+                    authentication:"jenkins_service_user",
+                    url :"${GIT_API_HEAD}/pulls/${PR_ID}/commits"
+
+                ])
+    
+    def json = readJSON text: response.content
+
+    def commitHash = json[-1].sha
+    def commitStatus = isCommitBuilt(commitHash)
+    if (!commitStatus)
+    {
+        triggerPR(PR_ID)
+    }
+}
+
+def isCommitBuilt(COMMIT_HASH)
+{
+    def response = httpRequest([
+                    authentication:"jenkins_service_user",
+                    url :"${GIT_API_HEAD}/commits/${COMMIT_HASH}/check-runs"
+
+                ])
+    
+    def json = readJSON text: response.content
+    if (json.total_count==0)
+    {
+        return false
+    }
+    return true
+}
+
+def triggerPR(PR_ID)
+{
+    echo "triggering build for :${PR_ID}"
+    def params1 =[string(name:'PR_no',value:"${PR_ID}")]
+    build job :"PRBuild",wait:false,parameters:params1 
 }
