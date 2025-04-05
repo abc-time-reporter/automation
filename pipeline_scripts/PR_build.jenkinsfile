@@ -85,8 +85,10 @@ pipeline
         }
         
     }
+    
 
-    def set_PR_status(status)
+}
+def set_PR_status(status)
     {
         httpRequest([
             acceptType :'APPLICATION_JSON',
@@ -100,5 +102,3 @@ pipeline
             }'''
         ])
     }
-
-}
