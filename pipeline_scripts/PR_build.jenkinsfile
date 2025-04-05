@@ -99,17 +99,16 @@ pipeline
 def set_PR_status(status, message) {
     // Use withCredentials to securely access the stored build_status secret
     withCredentials([string(credentialsId: 'build_status_pwd', variable: 'BUILD_STATUS_TOKEN')]) {
-        sh """
+        sh '''
             # Ensure using bash instead of sh
-            bash -c "
-            curl -L \\
-            -X POST \\
-            -H 'Accept: application/vnd.github+json' \\
-            -H 'Authorization: Bearer \${BUILD_STATUS_TOKEN}' \\
-            -H 'X-GitHub-Api-Version: 2022-11-28' \\
-            https://api.github.com/repos/abc-time-reporter/main-time-reporter/statuses/\${env.commit_SHA} \\
-            -d '{\"state\":\"\${status}\",\"target_url\":\"https://api.github.com/repos/abc-time-reporter/main-time-reporter/statuses/\${env.commit_SHA}\",\"description\":\"\${message}\",\"context\":\"continuous-integration/jenkins\"}'
-            '
-        """
+            curl -L \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${BUILD_STATUS_TOKEN}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/abc-time-reporter/main-time-reporter/statuses/${env.commit_SHA} \
+            -d '{"state":"${status}","target_url":"https://api.github.com/repos/abc-time-reporter/main-time-reporter/statuses/${env.commit_SHA}","description":"${message}","context":"continuous-integration/jenkins"}'
+        '''
     }
 }
+
