@@ -60,7 +60,7 @@ pipeline
         }
         stage("set PR Status")
         {
-            steps{set_PR_status('ongoing','ongoing build')}
+            steps{set_PR_status_1('ongoing','ongoing build')}
             
         }
         stage("checkout source")
@@ -110,5 +110,22 @@ def set_PR_status(status, message) {
             -d '{"state":"${status}","target_url":"https://api.github.com/repos/abc-time-reporter/main-time-reporter/statuses/${env.commit_SHA}","description":"${message}","context":"continuous-integration/jenkins"}'
         '''
     }
+}
+
+def set_PR_status_1(status,message)
+{
+    step([
+    $class: 'GitHubCommitStatusSetter',
+    reposSource: [$class: "ManuallyEnteredRepositorySource", url:" https://api.github.com/repos/abc-time-reporter/main-time-reporter"],
+    commitShaSource: [$class: "ManuallyEnteredShaSource", sha: env.commit_SHA ],
+    errorHandlers: [[$class: 'ShallowAnyErrorHandler']],
+    statusResultSource: [
+      $class: 'ConditionalStatusResultSource',
+      results: [
+        [$class: 'build', result: 'SUCCESS', state: 'SUCCESS', message: "${message}"],
+        
+      ]
+    ]
+  ])
 }
 
