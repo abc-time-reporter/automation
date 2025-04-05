@@ -103,10 +103,13 @@ def set_PR_status(status)
             authentication : "jenkins_service_user",
             contentType  : 'APPLICATION_JSON',
             httpMode : 'POST',
+            User-Agent:'request',
             url: "https://api.github.com/repos/abc-time-reporter/main-time-reporter/statuses/${env.commit_SHA}",
             requestBody : '''
             {
-
+                 state: success, 
+                context: jenkins-ci,
+                description": Successfully built the pull request
             }'''
         ])
     }
