@@ -140,7 +140,7 @@ def set_PR_status_1(status, message) {
                 ]
             ],
             // Configure GitHub API credentials here
-            credentialsId: 'build_status_pwd' // Referencing the Jenkins secret that holds your GitHub token
+             // Referencing the Jenkins secret that holds your GitHub token
         ])
     }
 }
