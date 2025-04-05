@@ -112,20 +112,37 @@ def set_PR_status(status, message) {
     }
 }
 
-def set_PR_status_1(status,message)
-{
+def set_PR_status_1(status, message) {
+    // Retrieve the GitHub token stored as a Jenkins secret
+    def githubToken = credentials('github-token')  // 'github-token' is the ID of the secret in Jenkins
+
     step([
-    $class: 'GitHubCommitStatusSetter',
-    reposSource: [$class: "ManuallyEnteredRepositorySource", url:" https://api.github.com/repos/abc-time-reporter/main-time-reporter"],
-    commitShaSource: [$class: "ManuallyEnteredShaSource", sha: env.commit_SHA ],
-    errorHandlers: [[$class: 'ShallowAnyErrorHandler']],
-    statusResultSource: [
-      $class: 'ConditionalStatusResultSource',
-      results: [
-        [$class: 'build', result: 'SUCCESS', state: 'SUCCESS', message: "${message}"],
-        
-      ]
-    ]
-  ])
+        $class: 'GitHubCommitStatusSetter',
+        reposSource: [
+            $class: "ManuallyEnteredRepositorySource", 
+            url: "https://api.github.com/repos/abc-time-reporter/main-time-reporter"
+        ],
+        commitShaSource: [
+            $class: "ManuallyEnteredShaSource", 
+            sha: env.commit_SHA
+        ],
+        errorHandlers: [
+            [$class: 'ShallowAnyErrorHandler']
+        ],
+        statusResultSource: [
+            $class: 'ConditionalStatusResultSource',
+            results: [
+                [
+                    $class: 'build', 
+                    result: status,  // 'SUCCESS' or 'FAILURE'
+                    state: status,   // 'SUCCESS' or 'FAILURE'
+                    message: "${message}"
+                ]
+            ]
+        ],
+        // Set the authorization header with the GitHub token for authentication
+        authHeader: "Bearer ${githubToken}" // This is where the token is added
+    ])
 }
+
 
