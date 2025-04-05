@@ -114,35 +114,13 @@ def set_PR_status(status, message) {
 
 def set_PR_status_1(status, message) {
     // Use Jenkins' built-in credential management to securely access GitHub token
-    withCredentials([string(credentialsId: 'build_status_pwd', variable: 'GITHUB_TOKEN')]) {
-        step([
-            $class: 'GitHubCommitStatusSetter',
-            reposSource: [
-                $class: "ManuallyEnteredRepositorySource",
-                url: "https://api.github.com/repos/abc-time-reporter/main-time-reporter"
-            ],
-            commitShaSource: [
-                $class: "ManuallyEnteredShaSource",
-                sha: env.commit_SHA
-            ],
-            errorHandlers: [
-                [$class: 'ShallowAnyErrorHandler']
-            ],
-            statusResultSource: [
-                $class: 'ConditionalStatusResultSource',
-                results: [
-                    [
-                        $class: 'build',
-                        result: status,  // 'SUCCESS' or 'FAILURE'
-                        state: status,   // 'SUCCESS' or 'FAILURE'
-                        message: "${message}"
-                    ]
-                ]
-            ],
-            // Configure GitHub API credentials here
-             // Referencing the Jenkins secret that holds your GitHub token
-        ])
-    }
+    step([
+      $class: "GitHubCommitStatusSetter",
+      reposSource: [$class: "ManuallyEnteredRepositorySource", url: "https://api.github.com/repos/abc-time-reporter/main-time-reporter/statuses/${env.commit_SHA}"],
+      contextSource: [$class: "ManuallyEnteredCommitContextSource", context: "ci/jenkins/build-status"],
+      errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
+      statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: status]] ]
+  ]);
 }
 
 
