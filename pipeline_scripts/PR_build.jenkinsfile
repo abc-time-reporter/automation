@@ -100,7 +100,7 @@ def set_PR_status(status)
     {
         httpRequest([
             acceptType :'APPLICATION_JSON',
-            authentication : "jenkins_service_user",
+            authentication : "build_status",
             contentType  : 'APPLICATION_JSON',
             httpMode : 'POST',
             headers: [
