@@ -96,22 +96,20 @@ pipeline
     
 
 }
-def set_PR_status(status)
-    {
-        httpRequest([
-            acceptType :'APPLICATION_JSON',
-            authentication : "build_status",
-            contentType  : 'APPLICATION_JSON',
-            httpMode : 'POST',
-            headers: [
+def set_PR_status(status) {
+    httpRequest([
+        acceptType: 'APPLICATION_JSON',
+        authentication: "build_status",  // Ensure this is a valid Jenkins credential ID
+        contentType: 'APPLICATION_JSON',
+        httpMode: 'POST',
+        headers: [
             'User-Agent': 'request'  // Corrected header syntax
-            ],
-            url: "https://api.github.com/repos/abc-time-reporter/main-time-reporter/statuses/${env.commit_SHA}",
-            requestBody : '''
-            {
-                 state: success, 
-                context: jenkins-ci,
-                description": Successfully built the pull request
-            }'''
-        ])
-    }
+        ],
+        url: "https://api.github.com/repos/abc-time-reporter/main-time-reporter/statuses/${env.commit_SHA}",
+        requestBody: """{
+            "state": "${status}",  // Interpolate the status variable
+            "context": "jenkins-ci",  // Ensure the context is in quotes
+            "description": "Successfully built the pull request"  // Fixed the misplaced quote here
+        }"""
+    ])
+}
