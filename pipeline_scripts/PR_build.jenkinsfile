@@ -113,36 +113,37 @@ def set_PR_status(status, message) {
 }
 
 def set_PR_status_1(status, message) {
-    // Retrieve the GitHub token stored as a Jenkins secret
-    def githubToken = credentials('github-token')  // 'github-token' is the ID of the secret in Jenkins
-
-    step([
-        $class: 'GitHubCommitStatusSetter',
-        reposSource: [
-            $class: "ManuallyEnteredRepositorySource", 
-            url: "https://api.github.com/repos/abc-time-reporter/main-time-reporter"
-        ],
-        commitShaSource: [
-            $class: "ManuallyEnteredShaSource", 
-            sha: env.commit_SHA
-        ],
-        errorHandlers: [
-            [$class: 'ShallowAnyErrorHandler']
-        ],
-        statusResultSource: [
-            $class: 'ConditionalStatusResultSource',
-            results: [
-                [
-                    $class: 'build', 
-                    result: status,  // 'SUCCESS' or 'FAILURE'
-                    state: status,   // 'SUCCESS' or 'FAILURE'
-                    message: "${message}"
+    // Use Jenkins' built-in credential management to securely access GitHub token
+    withCredentials([string(credentialsId: 'build_status_pwd', variable: 'GITHUB_TOKEN')]) {
+        step([
+            $class: 'GitHubCommitStatusSetter',
+            reposSource: [
+                $class: "ManuallyEnteredRepositorySource",
+                url: "https://api.github.com/repos/abc-time-reporter/main-time-reporter"
+            ],
+            commitShaSource: [
+                $class: "ManuallyEnteredShaSource",
+                sha: env.commit_SHA
+            ],
+            errorHandlers: [
+                [$class: 'ShallowAnyErrorHandler']
+            ],
+            statusResultSource: [
+                $class: 'ConditionalStatusResultSource',
+                results: [
+                    [
+                        $class: 'build',
+                        result: status,  // 'SUCCESS' or 'FAILURE'
+                        state: status,   // 'SUCCESS' or 'FAILURE'
+                        message: "${message}"
+                    ]
                 ]
-            ]
-        ],
-        // Set the authorization header with the GitHub token for authentication
-        authHeader: "Bearer ${githubToken}" // This is where the token is added
-    ])
+            ],
+            // Configure GitHub API credentials here
+            credentialsId: 'build_status_pwd' // Referencing the Jenkins secret that holds your GitHub token
+        ])
+    }
 }
+
 
 
