@@ -60,7 +60,8 @@ pipeline
         }
         stage("set PR Status")
         {
-            set_PR_status('succesful')
+            steps{set_PR_status('succesful')}
+            
         }
         stage("checkout source")
         {
@@ -79,6 +80,13 @@ pipeline
                             git merge origin/master
                             '''
                         }
+                    }
+                }
+                stage("master-checkout")
+                {
+                    steps
+                    {
+                        echo "master checkout"
                     }
                 }
             }
