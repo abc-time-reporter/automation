@@ -98,7 +98,7 @@ pipeline
 }
 def set_PR_status(status, message) {
     // Use withCredentials to securely access the stored build_status secret
-    withCredentials([string(credentialsId: 'build_status', variable: 'BUILD_STATUS_TOKEN')]) {
+    withCredentials([string(credentialsId: 'build_status_pwd', variable: 'BUILD_STATUS_TOKEN')]) {
         sh """
             # Ensure using bash instead of sh
             bash -c "
