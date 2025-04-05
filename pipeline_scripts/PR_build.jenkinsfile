@@ -23,7 +23,7 @@ pipeline
                 script
                 {
                     def prResponse = httpRequest([
-                        authentication :"265950d0-3094-4dc3-98d5-47ee301eeb60",
+                        authentication :"jenkins_service_user",
                         url: "${GIT_API_HEAD}/pulls/${env.PR_no}",
                         validResponseCodes: '200'
                         
@@ -38,10 +38,14 @@ pipeline
                 script 
                 {
                     def commitResponse = httpRequest([
-                        authentication :"265950d0-3094-4dc3-98d5-47ee301eeb60",
+                        authentication :"jenkins_service_user",
                         url: "${GIT_API_HEAD}/pulls/${env.PR_no}/commits",
                         validResponseCodes: '200'
                     ])
+                    def commitsJson = readJSON text: commitResponse.content
+                    env.commit_SHA = commitsJson[-1].sha
+                    echo "${env.commit_SHA}"
+
                 }
             }
             post 
@@ -54,6 +58,10 @@ pipeline
                 }
             }
         }
+        stage("set PR Status")
+        {
+            set_PR_status('succesful')
+        }
         stage("checkout source")
         {
             parallel
@@ -65,7 +73,7 @@ pipeline
                         {
                             sh'''
                             git init
-                            git remote add origin https://265950d0-3094-4dc3-98d5-47ee301eeb60@github.com/abc-time-reporter/main-time-reporter.git
+                            git remote add origin https://jenkins_service_user@github.com/abc-time-reporter/main-time-reporter.git
                             git fetch --all
                             git checkout -b %source_branch% origin/%source_branch%
                             git merge origin/master
@@ -76,6 +84,21 @@ pipeline
             }
         }
         
+    }
+
+    def set_PR_status(status)
+    {
+        httpRequest([
+            acceptType :'APPLICATION_JSON',
+            authentication : "jenkins_service_user",
+            contentType  : 'APPLICATION_JSON',
+            httpMode : 'POST',
+            url: "https://api.github.com/repos/abc-time-reporter/main-time-reporter/statuses/${GITHUB_SHA}",
+            requestBody : '''
+            {
+
+            }'''
+        ])
     }
 
 }
