@@ -1,0 +1,89 @@
+pipeline {
+    // Where to execute the pipeline
+    agent any
+    
+
+    // The main pipeline stages
+    stages {
+        stage('master checkout') {
+            steps {
+                
+                sh"""#!/bin/bash
+                set -e
+                git clone --branch master --single-branch https://jenkins_service_user@github.com/abc-time-reporter/main-time-reporter.git master-checkout
+                """
+            }
+        }
+
+        stage('Master Build') {
+            steps {
+                dir("master-checkout") {
+                    sh 'npm install'
+                    sh 'npm run build' // Or 'ng build --prod'
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo "Running tests..."
+            }
+        }
+
+    
+    }
+
+    // Post-execution actions
+    post {
+        always {
+            // Steps that always run
+            echo "This always runs"
+        }
+        success {
+            emailext (
+                subject: "Master Build SUCCESS",
+                body: """
+                    <html>
+                        <body>
+                            <h2>Master Build Successful</h2>
+                            <p>The master branch build completed successfully.</p>
+                            <ul>
+                                <li>Build Number: ${BUILD_NUMBER}</li>
+                                <li>Build URL: <a href="${BUILD_URL}">${BUILD_URL}</a></li>
+                            </ul>
+                        </body>
+                    </html>
+                """,
+                mimeType: 'text/html',
+                to: 'devopsadmin@gmail.com'
+            )
+        }
+        failure {
+            emailext (
+                subject: "Master Build FAILED",
+                body: """
+                    <html>
+                        <body>
+                            <h2>Master Build Failed</h2>
+                            <p style="color: red;">The master branch build has failed!</p>
+                            <ul>
+                                <li>Build Number: ${BUILD_NUMBER}</li>
+                                <li>Build URL: <a href="${BUILD_URL}">${BUILD_URL}</a></li>
+                            </ul>
+                            <h3>Console Output:</h3>
+                            <pre>${currentBuild.rawBuild.getLog(100).join('\n')}</pre>
+                        </body>
+                    </html>
+                """,
+                mimeType: 'text/html',
+                to: 'devopsadmin@gmail.com'
+            )
+        }
+        cleanup {
+            echo "Cleaning up workspace..."
+            dir("master-checkout") {
+                deleteDir()
+            }
+        }
+    }
+}

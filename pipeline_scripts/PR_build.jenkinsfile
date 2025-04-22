@@ -1,6 +1,9 @@
 pipeline
 {
     agent any
+    tools {
+        nodejs 'NodeJS' // This should match the name of your NodeJS installation in Jenkins Global Tool Configuration
+    }
     parameters
     {
         string(defaultValue:'0',description:"Pull Request ID", name:"PR_no")
@@ -60,7 +63,9 @@ pipeline
         }
         stage("set PR Status")
         {
-            steps{set_PR_status_1('ongoing','ongoing build')}
+            steps {
+                echo "Setting PR status (placeholder)..."
+            }
             
         }
         stage("checkout source")
@@ -70,31 +75,55 @@ pipeline
                 stage("revision-checkout")
                 {
                     steps{
-                        dir("revision-checkout")
-                        {
-                            sh'''
-                            git init
-                            git remote add origin https://jenkins_service_user@github.com/abc-time-reporter/main-time-reporter.git
-                            git fetch --all
-                            git checkout -b %source_branch% origin/%source_branch%
-                            git merge origin/master
-                            '''
-                        }
+                        sh"""#!/bin/bash
+                        set -e
+                        git clone --depth 1 --no-single-branch https://jenkins_service_user@github.com/abc-time-reporter/main-time-reporter.git revision-checkout
+                        cd revision-checkout
+                        git fetch origin "${env.commit_SHA}"
+                        git checkout "${env.commit_SHA}"
+                        """
                     }
                 }
                 stage("master-checkout")
                 {
                     steps
                     {
-                        echo "master checkout"
+                        sh"""#!/bin/bash
+                        set -e
+                        git clone --branch master --single-branch https://jenkins_service_user@github.com/abc-time-reporter/main-time-reporter.git master-checkout
+                        """
                     }
                 }
             }
         }
-        
+        stage("build-revision") {
+            steps {
+                dir("revision-checkout") {
+                    sh 'npm install'
+                    sh 'npm run build' // Or 'ng build --prod'
+                }
+            }
+        }
+        stage("build-master") {
+            steps {
+                dir("master-checkout") {
+                    sh 'npm install'
+                    sh 'npm run build' // Or 'ng build --prod'
+                }
+            }
+        }
     }
-    
-
+    post {
+        always {
+            echo "Cleaning workspace..."
+            dir("revision-checkout") {
+                deleteDir() 
+            }
+            dir("master-checkout") {
+                 deleteDir()
+            }
+        }
+    }
 }
 def set_PR_status(status, message) {
     // Use withCredentials to securely access the stored build_status secret
@@ -126,7 +155,7 @@ def set_PR_status_1(status, message) {
     ],
     contextSource: [
         $class: "ManuallyEnteredCommitContextSource", 
-        context: "ci/jenkins/build-status"
+        context: "build"
     ],
     errorHandlers: [
         [$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]
@@ -139,6 +168,64 @@ def set_PR_status_1(status, message) {
     ]
 ]);
 
+}
+
+def set_PR_status_2(status,message)
+{
+     withCredentials([usernamePassword(credentialsId: 'build_status', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+      sh '''curl -X POST --user $USERNAME:$PASSWORD --data '{"state": "success"}' --url https://api.github.com/repos/abc-time-reporter/main-time-reporter/statuses/ddd51812f22e960c45cb19795b9c8c3f2440e718'''
+
+    }
+}
+def setGitHubCommitStatus(String status, String message, String commitSHA) {
+
+    def url = " https://api.github.com/repos/abc-time-reporter/main-time-reporter/statuse/${commitSHA}"
+
+    // Construct the JSON body for the request
+    def requestBody = """
+    {
+        "state": "${status}",
+        "target_url": "https://example.com/build/status",
+        "description": "${message}",
+        "context": "continuous-integration/jenkins"
+    }
+    """
+ withCredentials([string(credentialsId: 'build_status_pwd', variable: 'BUILD_STATUS_TOKEN')]) {
+    // Make the HTTP request to GitHub API
+    def response = httpRequest(
+        url: url,
+        httpMode: 'POST',
+        customHeaders: [
+            [name: 'Accept', value: 'application/vnd.github+json'],
+            [name: 'Authorization', value: "Bearer ${BUILD_STATUS_TOKEN}"],
+            [name: 'X-GitHub-Api-Version', value: '2022-11-28']
+        ],
+        requestBody: requestBody,
+        validResponseCodes: '200'
+    )
+ }
+
+    // Print the response (for debugging)
+    echo "Response: ${response}"
+}
+def update_status_check(String message, String context, String state)
+{
+    withCredentials([string(credentialsId: 'build_status_pwd', variable: 'TOKEN')]) {
+
+        sh """
+            set -x
+            curl -u abc_service_user:$TOKEN \\
+                -H "Content-Type: application/json" \\
+                -X POST \\
+                -d '{
+                    "description": "${message}",
+                    "state": "${state}",
+                    "context": "${context}",
+                    "target_url": "${BUILD_URL}"
+                }' \\
+                "https://api.github.com/repos/org/repo/statuses/$env.commit_SHA"
+        """
+    } 
 }
 
 
